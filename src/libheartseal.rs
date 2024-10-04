@@ -2,7 +2,6 @@
 use unity::{prelude::*};
 use engage::gamedata::unit::Unit;
 use engage::gamedata::JobData;
-use engage::mess::Mess;
 use engage::gamedata::WeaponMask;
 
 #[unity::class("App", "ClassChange.ChangeJobData")]
@@ -25,17 +24,21 @@ pub struct ChangeJobData {
 //#[unity::class("App", "ClassChange.ChangeJobData")]
 #[skyline::hook(offset=0x019c6700)]
 pub fn compare_sid_jid(this: &mut ChangeJobData, unit: &Unit, method_info: OptionalMethod) -> bool {
-    //let sid_append: &Il2CppString = format!("SID_{}", this.job.jid.get_string().unwrap()).into();
+    let sid_append: &Il2CppString = format!("SID_{}", this.job.jid.get_string().unwrap()).into();
     let as_normal = call_original!(this, unit, method_info);
-    if this.is_default_job == false {
-        this.is_gender = false;
-        return false;
+    //if Unit::has_sid(unit, sid_append) == true {
+    if unit.has_sid(sid_append) == true {
+        println!("SID found: {}", format!("SID_{}", this.job.jid.get_string().unwrap()));
+        this.is_gender = true;
+        this.is_default_job = true;
+        return as_normal;
     }
     else {
-        return as_normal
+        println!("SID not found: {}", format!("SID_{}", this.job.jid.get_string().unwrap()));
+        this.is_gender = false;
+        return false;
 }
 }
-
 #[skyline::main(name = "hooks")]
 pub fn main() {
     skyline::install_hook!(compare_sid_jid);
